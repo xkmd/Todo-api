@@ -1,5 +1,6 @@
 // 404 - not found
 // 400 - bad syntax
+// 500 - server error
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
@@ -51,21 +52,28 @@ app.get('/todos', function(req, res){
 // GET /todos/:id
 app.get('/todos/:id', function(req, res){
     var todoId = parseInt(req.params.id);
-    var matchedTodo = _.findWhere(todos, {id:todoId});
-//    var matchedTodo;
-//    todos.forEach(function(todo){
-//        if(todoId === todo.id){
-//            matchedTodo = todo;
-//        }
-//    });
-    if(matchedTodo)
-        res.json(matchedTodo);
-    else
-        res.status(404).send();
-    //res.send('Asking for todo with id of ' + req.params.id);
+    //with db
+    db.todo.findById(todoId).then(function(todo){
+        if(todo){
+            res.json(todo.toJSON());
+        }else{
+            res.status(404).send();
+        }
+    }, function(e){
+        res.status(500).send();
+    });
+    
+    //without db
+//    var matchedTodo = _.findWhere(todos, {id:todoId});
+//    
+//    if(matchedTodo)
+//        res.json(matchedTodo);
+//    else
+//        res.status(404).send();
+//    //res.send('Asking for todo with id of ' + req.params.id);
 });
 
-// with db
+// POST /todos    with db
 app.post('/todos', function(req, res){
     var body = _.pick(req.body, 'description', 'completed');
     
@@ -74,17 +82,6 @@ app.post('/todos', function(req, res){
     }, function (e){
         res.status(400).json(e);
     })
-//    
-//    
-//    body.description = body.description.trim();
-//    
-//    if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.length === 0){
-//        return res.status(400).send();
-//    }
-//    body.id = todoNextId++;
-//    todos.push(body);
-//    //console.log('description ' + body.description);
-//    res.json(body);
 });
 
 // POST /todos/     without db
