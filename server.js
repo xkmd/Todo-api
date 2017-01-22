@@ -1,6 +1,7 @@
 // 404 - not found
 // 400 - bad syntax
 // 500 - server error
+// 204 - OK but nothing to send back
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
@@ -122,13 +123,31 @@ app.post('/todos', function(req, res){
 
 app.delete('/todos/:id', function(req,res){
     var todoId = parseInt(req.params.id, 10);
-    var matchedTodo = _.findWhere(todos,{id: todoId});
-    if(!matchedTodo)
-        res.status(404).json({"error":"no todo find with that id"});
-    else{
-        todos = _.without(todos, matchedTodo);
-        res.json(matchedTodo);
+    //with db
+    var where = {};
+    if(todoId > 0){
+        where.id = todoId;
     }
+    db.todo.destroy({where: where}).then(function(rowsDeleted){
+        if(rowsDeleted === 0){
+            res.status(404).json({
+                error: "no todo with id"
+            });
+        }
+        else{
+            res.status(204).send();
+        }
+    }, function(e){
+        res.status(500).send();
+    });
+    //without db
+//    var matchedTodo = _.findWhere(todos,{id: todoId});
+//    if(!matchedTodo)
+//        res.status(404).json({"error":"no todo find with that id"});
+//    else{
+//        todos = _.without(todos, matchedTodo);
+//        res.json(matchedTodo);
+//    }
     
 });
 
