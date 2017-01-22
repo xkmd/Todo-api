@@ -1,10 +1,10 @@
 var Sequelize = require('sequelize');
 
 // for heroku, postgresql...etc
-var env = process.env.NODE_ENV || 'development'; 
+var env = process.env.NODE_ENV || 'development';
 var sequelize;
 if(env === 'production'){
-    sequelize = new Sequelize(process.env.DATABAE_URL, {
+    sequelize = new Sequelize(process.env.DATABASE_URL, {
         dialect: 'postgres'
     });
 }else{
