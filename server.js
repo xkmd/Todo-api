@@ -231,7 +231,6 @@ app.put('/todos/:id', middleware.requireAuthentication, function(req, res){
 
 app.post('/users', function(req, res){
     var body = _.pick(req.body, 'email', 'password');
-    
     db.user.create(body).then(function(user){
         res.json(user.toPublicJSON());
     }, function (e){
@@ -242,15 +241,33 @@ app.post('/users', function(req, res){
 //POST /users/login
 app.post('/users/login', function(req, res){
     var body = _.pick(req.body, 'email', 'password');
-    db.user.authenticate(body).then(function(user){
+    var userInstance;
+    db.user.authenticate(body).then(function(user){ //this .then runs after authenticate finishes
         var token = user.generateToken('authentication');
-        if(token)
-            res.header('Auth', token).json(user.toPublicJSON());
-        else{
-            res.status(401).send();
-        }
-    }, function(){
-        res.status(401).send();
+        userInstance = user;
+        //calling to store token to database for manage user/logout
+        //hash get saved, then we need to handle folowing if else statement elsewhere--------->
+        return db.token.create({ //                                                           |
+            token: token//                                                                    |
+        });//                                                                                 |
+        
+//        if(token)
+//            res.header('Auth', token).json(user.toPublicJSON());
+//        else{
+//            res.status(401).send();
+//        }                                                                                   |
+    }).then(function(tokenInstance){// this runs after token.create() finishes                |
+        res.header('Auth', tokenInstance.get('token')).json(userInstance.toPublicJSON());// <--
+    }).catch( function(){// and this runs if anything goes wrong along the way                |
+        res.status(401).send();//                                                           <--
+    });
+});
+// DELETE /users/login ===> logout
+app.delete('/users/login', middleware.requireAuthentication, function(req, res){
+    req.token.destroy().then(function(){
+        res.status(204).send();
+    }).catch(function(){
+        res.status(500).send();
     });
 });
 
