@@ -100,8 +100,16 @@ app.get('/todos/:id', middleware.requireAuthentication, function(req, res){
 app.post('/todos', middleware.requireAuthentication, function(req, res){
     var body = _.pick(req.body, 'description', 'completed');
     
-    db.todo.create(body).then(function(todo){
-        res.json(todo.toJSON());
+    db.todo.create(body).then(function(todo){// <----------|
+        //res.json(todo.toJSON());                         |
+        req.user.addTodo(todo).then(function(){//          |
+            //reason for making this return call is that 'todo' we've got referenced
+            //is different than the one that lies in database since we added
+            //asociation , since it's been created
+            return todo.reload();
+        }).then(function(todo){ //this has passed the returned reloaded todo
+            res.json(todo.toJSON());
+        });
     }, function (e){
         res.status(400).json(e);
     })
