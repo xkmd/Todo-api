@@ -12,7 +12,7 @@ var middleware = require('./middleware.js')(db);
 var app = express();
 var PORT = process.env.PORT || 3000;
 var bcrypt = require('bcrypt');
-
+console.log("testing pull and merge");
 //var todos = [{
 //    id: 1,
 //    description: 'Meet mom for lunch',
